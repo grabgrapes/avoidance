@@ -109,6 +109,9 @@ export function connectRobot() {
 });
 }
 
+window.connectRobot = connectRobot;
+window.initiate = initiate;
+
 export function forward() {
   robot.forward();
 }
