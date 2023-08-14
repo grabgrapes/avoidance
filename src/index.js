@@ -11,7 +11,12 @@ let lastDirection = null;
 
 function startCamera() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
+        let constraints = {
+            video: {
+                facingMode: 'environment' // 使用后置摄像头
+            }
+        };
+        navigator.mediaDevices.getUserMedia(constraints)
             .then(stream => {
                 videoElement.srcObject = stream;
                 videoElement.play();
