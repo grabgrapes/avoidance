@@ -66,6 +66,12 @@ function controlRobotBasedOnQRCodeCenters(centers) {
     }
 }
 
+function drawBoxAroundQRCode(ctx, location) {
+    ctx.strokeStyle = 'lime';  // 设置线条颜色为绿色
+    ctx.lineWidth = 5;  // 设置线条宽度
+    ctx.strokeRect(location.x, location.y, location.width, location.height);
+}
+
 function scanForQRCodes() {
     const { ctx, data } = captureCurrentFrame(videoElement);
     let detectedCodes = [];
@@ -85,6 +91,7 @@ function scanForQRCodes() {
                 height: BottomLeftY - TopLeftY
             };
             detectedCodes.push(location);
+            drawBoxAroundQRCode(ctx, location);  // 在此处添加绘制框的代码
             ctx.fillStyle = 'white';
             ctx.fillRect(location.x, location.y, location.width, location.height);
             data.data.set(ctx.getImageData(0, 0, data.width, data.height).data);
