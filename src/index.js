@@ -67,45 +67,45 @@ function controlRobotBasedOnQRCodeCenters(centers) {
 }
 
 function scanForQRCodes() {
-    setInterval(() => {
-        const { ctx, data } = captureCurrentFrame(videoElement);
-        let detectedCodes = [];
-        let maxAttempts = 2;
+    const { ctx, data } = captureCurrentFrame(videoElement);
+    let detectedCodes = [];
+    let maxAttempts = 2;
 
-        for (let i = 0; i < maxAttempts; i++) {
-            const code = jsQR(data.data, data.width, data.height);
-            if (code) {
-                let TopLeftX = code.location.topLeftCorner.x;
-                let TopLeftY = code.location.topLeftCorner.y;
-                let TopRightX = code.location.topRightCorner.x;
-                let BottomLeftY = code.location.bottomLeftCorner.y;
-                let location = {
-                    x: TopLeftX,
-                    y: TopLeftY,
-                    width: TopRightX - TopLeftX,
-                    height: BottomLeftY - TopLeftY
-                };
-                detectedCodes.push(location);
-                ctx.fillStyle = 'white';
-                ctx.fillRect(location.x, location.y, location.width, location.height);
-                data.data.set(ctx.getImageData(0, 0, data.width, data.height).data);
-            } else {
-                break;
-            }
-        }
-
-        if (detectedCodes.length !== 2) {
-            if (lastDirection) {
-                robot[lastDirection](); // Continue moving in the last known direction
-            } else {
-                robot.spin();  // Only spin if we never had a direction
-            }
+    for (let i = 0; i < maxAttempts; i++) {
+        const code = jsQR(data.data, data.width, data.height);
+        if (code) {
+            let TopLeftX = code.location.topLeftCorner.x;
+            let TopLeftY = code.location.topLeftCorner.y;
+            let TopRightX = code.location.topRightCorner.x;
+            let BottomLeftY = code.location.bottomLeftCorner.y;
+            let location = {
+                x: TopLeftX,
+                y: TopLeftY,
+                width: TopRightX - TopLeftX,
+                height: BottomLeftY - TopLeftY
+            };
+            detectedCodes.push(location);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(location.x, location.y, location.width, location.height);
+            data.data.set(ctx.getImageData(0, 0, data.width, data.height).data);
         } else {
-            const centers = detectedCodes.map(computeCenterOfQRCode);
-            controlRobotBasedOnQRCodeCenters(centers);
+            break;
         }
+    }
 
-    }, 600); // Check every second
+    if (detectedCodes.length !== 2) {
+        if (lastDirection) {
+            robot[lastDirection](); // Continue moving in the last known direction
+        } else {
+            robot.spin();  // Only spin if we never had a direction
+        }
+    } else {
+        const centers = detectedCodes.map(computeCenterOfQRCode);
+        controlRobotBasedOnQRCodeCenters(centers); // 注意函数名的修改
+    }
+
+    // 在1秒后再次运行此函数
+    setTimeout(scanForQRCodes, 1000);
 }
 
 export function connectRobot() {
