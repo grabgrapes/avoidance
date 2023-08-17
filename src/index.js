@@ -66,19 +66,69 @@ function controlRobotBasedOnQRCodeCenters(centers) {
     }
 }
 
-function drawBoxAroundQRCode(ctx, location) {
-    ctx.strokeStyle = 'lime';  // 设置线条颜色为绿色
-    ctx.lineWidth = 5;  // 设置线条宽度
-    ctx.strokeRect(location.x, location.y, location.width, location.height);
+// function drawBoxAroundQRCode(ctx, location) {
+//     ctx.strokeStyle = 'lime';  // 设置线条颜色为绿色
+//     ctx.lineWidth = 5;  // 设置线条宽度
+//     ctx.strokeRect(location.x, location.y, location.width, location.height);
+// }
+
+// function setToWhite(imageDataArray, location, width) {
+//     const imageDataWidth = width;
+//     const imageDataHeight = imageDataArray.length / (width * 4);  // Assuming RGBA data
+//
+//     for (let y = location.y; y < location.y + location.height && y < imageDataHeight; y++) {
+//         for (let x = location.x; x < location.x + location.width && x < imageDataWidth; x++) {
+//             const index = (y * width + x) * 4;
+//
+//             if (index + 3 < imageDataArray.length) {  // Ensure we don't go out of bounds
+//                 imageDataArray[index] = 255;     // R
+//                 imageDataArray[index + 1] = 255; // G
+//                 imageDataArray[index + 2] = 255; // B
+//                 imageDataArray[index + 3] = 255; // A
+//             }
+//         }
+//     }
+// }
+
+// function setToWhite(imageData, location) {
+//     for (let y = location.y; y < location.y + location.height; y++) {
+//         for (let x = location.x; x < location.x + location.width; x++) {
+//             const index = (y * imageData.width + x) * 4;
+//
+//             if (index + 3 < imageData.data.length) {
+//                 imageData.data[index] = 255;     // R
+//                 imageData.data[index + 1] = 255; // G
+//                 imageData.data[index + 2] = 255; // B
+//                 imageData.data[index + 3] = 255; // A
+//             }
+//         }
+//     }
+// }
+
+const dataBeforeElement = document.getElementById('dataBefore');
+const dataAfterElement = document.getElementById('dataAfter');
+
+function compareData() {
+    const dataBefore = document.getElementById('dataBefore').value;
+    const dataAfter = document.getElementById('dataAfter').value;
+
+    if (dataBefore === dataAfter) {
+        console.log("The data is the same.");
+        alert("The data is the same.");
+    } else {
+        console.log("The data has changed.");
+        alert("The data has changed.");
+    }
 }
 
 function scanForQRCodes() {
-    const { ctx, data } = captureCurrentFrame(videoElement);
+    let { ctx, data } = captureCurrentFrame(videoElement);
     let detectedCodes = [];
     let maxAttempts = 2;
 
     for (let i = 0; i < maxAttempts; i++) {
         const code = jsQR(data.data, data.width, data.height);
+        console.log(code);
         if (code) {
             let TopLeftX = code.location.topLeftCorner.x;
             let TopLeftY = code.location.topLeftCorner.y;
@@ -91,14 +141,24 @@ function scanForQRCodes() {
                 height: BottomLeftY - TopLeftY
             };
             detectedCodes.push(location);
-            drawBoxAroundQRCode(ctx, location);  // 在此处添加绘制框的代码
+            // drawBoxAroundQRCode(ctx, location);  // 在此处添加绘制框的代码
+            // setToWhite(data.data, location, data.width);  // 把二维码区域设置为白色
+            // setToWhite(data, location);
+            dataBeforeElement.value = Array.from(data.data).toString();
             ctx.fillStyle = 'white';
             ctx.fillRect(location.x, location.y, location.width, location.height);
-            data.data.set(ctx.getImageData(0, 0, data.width, data.height).data);
+            data = ctx.getImageData(0, 0, data.width, data.height)
+            dataAfterElement.value = Array.from(data.data).toString();
+            compareData();
+            // data.data.set(ctx.getImageData(0, 0, data.width, data.height).data);
+
+            console.log("find a QRcode");
         } else {
             break;
         }
     }
+
+    console.log(detectedCodes); // 输出detectedCodes数组的内容
 
     if (detectedCodes.length !== 2) {
         if (lastDirection) {
@@ -109,10 +169,11 @@ function scanForQRCodes() {
     } else {
         const centers = detectedCodes.map(computeCenterOfQRCode);
         controlRobotBasedOnQRCodeCenters(centers); // 注意函数名的修改
+        console.log("calculated center and robot moved as instructed")
     }
 
     // 在1秒后再次运行此函数
-    setTimeout(scanForQRCodes, 1000);
+    setTimeout(scanForQRCodes, 10000);
 }
 
 export function connectRobot() {
