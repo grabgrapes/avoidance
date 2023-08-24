@@ -6,6 +6,7 @@ export function initiate() {
 }
 
 const videoElement = document.getElementById('cameraView');
+const canvasOverlay = document.getElementById('canvasOverlay');
 let robot = new Robot();
 
 function startCamera() {
@@ -21,6 +22,11 @@ function startCamera() {
                 videoElement.play();
 
                 videoElement.onplaying = () => {
+                    canvasOverlay.width = videoElement.videoWidth;
+                    canvasOverlay.height = videoElement.videoHeight;
+                    canvasOverlay.style.position = 'absolute';
+                    canvasOverlay.style.top = videoElement.offsetTop + 'px';
+                    canvasOverlay.style.left = videoElement.offsetLeft + 'px';
                     scanForQRCode();
                 };
             })
@@ -59,6 +65,14 @@ function controlRobotBasedOnQRCodeCenter(center) {
     }
 }
 
+function drawRectangleAroundQRCode(location) {
+    const ctx = canvasOverlay.getContext('2d');
+    ctx.clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
+    ctx.strokeStyle = 'green';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(location.x, location.y, location.width, location.height);
+}
+
 function scanForQRCode() {
     let { ctx, data } = captureCurrentFrame(videoElement);
     const code = jsQR(data.data, data.width, data.height);
@@ -75,9 +89,11 @@ function scanForQRCode() {
         };
         const center = computeCenterOfQRCode(location);
         controlRobotBasedOnQRCodeCenter(center);
+        drawRectangleAroundQRCode(location);
+    } else {
+        const ctx = canvasOverlay.getContext('2d');
+        ctx.clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
     }
-
-    // 在1秒后再次运行此函数
     setTimeout(scanForQRCode, 200);
 }
 
